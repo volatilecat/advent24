@@ -1,11 +1,10 @@
 use aoc_runner_derive::aoc;
-use itertools::Itertools;
 
-fn parse(input: &str) -> impl Iterator<Item = Vec<u32>> + '_ {
+fn parse(input: &str) -> impl Iterator<Item = impl Iterator<Item = u32> + '_> + '_ {
     input
         .split('\n')
         .filter(|line| !line.is_empty())
-        .map(|line| line.split(" ").map(|v| v.parse().unwrap()).collect_vec())
+        .map(|line| line.split(" ").map(|v| v.parse().unwrap()))
 }
 
 #[inline]
@@ -14,65 +13,71 @@ fn is_safe_diff(a: u32, b: u32) -> bool {
     diff > 0 && diff < 4
 }
 
-fn is_safe(line: &Vec<u32>) -> bool {
-    let (a, b) = (line[0], line[1]);
+fn is_safe(mut line: impl Iterator<Item = u32>) -> bool {
+    let first = line.next().unwrap();
+    let mut prev = line.next().unwrap();
 
-    if !is_safe_diff(a, b) {
+    if !is_safe_diff(first, prev) {
         return false;
     }
 
-    let incr = b > a;
+    let incr = prev > first;
 
-    for i in 1..line.len() {
-        let (a, b) = (line[i - 1], line[i]);
-
-        if incr && a >= b {
+    for cur in line {
+        if incr && prev >= cur {
             return false;
         }
 
-        if !incr && b >= a {
+        if !incr && cur >= prev {
             return false;
         }
 
-        if !is_safe_diff(a, b) {
+        if !is_safe_diff(prev, cur) {
             return false;
         }
+
+        prev = cur;
     }
 
     true
 }
 
-fn is_safe_skip(line: &Vec<u32>, remove: usize) -> bool {
-    let line: Vec<u32> = line
-        .iter()
-        .copied()
-        .take(remove)
-        .chain(line.iter().copied().skip(remove + 1))
-        .collect();
-
-    is_safe(&line)
+fn is_safe_skip(line: impl Iterator<Item = u32>, idx: usize) -> bool {
+    let line = line.enumerate().filter(|&(i, _)| i != idx).map(|(_, v)| v);
+    is_safe(line)
 }
 
 #[aoc(day2, part1)]
 pub fn part1(input: &str) -> usize {
-    parse(input).filter(is_safe).count()
+    let mut cnt = 0;
+    for line in parse(input) {
+        if is_safe(line) {
+            cnt += 1;
+        }
+    }
+    cnt
 }
 
 #[aoc(day2, part2)]
 pub fn part2(input: &str) -> u32 {
     let mut cnt = 0;
+    let mut buf: Vec<u32> = Vec::with_capacity(8);
 
     for line in parse(input) {
-        if is_safe(&line) {
-            cnt += 1
+        buf.extend(line);
+
+        if is_safe(buf.iter().copied()) {
+            cnt += 1;
         } else {
-            for i in 0..line.len() {
-                if is_safe_skip(&line, i) {
+            for i in 0..buf.len() {
+                if is_safe_skip(buf.iter().copied(), i) {
                     cnt += 1;
                     break;
                 }
             }
         }
+
+        buf.clear();
     }
 
     cnt
