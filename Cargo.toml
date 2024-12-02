@@ -1,0 +1,19 @@
+[package]
+name = "advent24"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+bench = false
+
+[profile.dev]
+debug = 0
+
+[dependencies]
+aoc-parse = "0.2.18"
+aoc-runner = "0.3.0"
+aoc-runner-derive = "0.3.0"
+indoc = "2.0.5"
+itertools = "0.13.0"
+num-traits = "0.2.19"
+rustc-hash = "2.1.0"
