@@ -37,7 +37,7 @@ pub fn part1(input: &str) -> u64 {
 }
 
 #[aoc(day1, part2)]
-fn part2(input: &str) -> u64 {
+pub fn part2(input: &str) -> u64 {
     let mut list = Vec::with_capacity(INPUT_CAP);
     let mut count = Counter::with_capacity(INPUT_CAP);
 
