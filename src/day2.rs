@@ -14,7 +14,7 @@ impl<'a> Iter<'a> {
     }
 }
 
-impl<'a> Iterator for Iter<'a> {
+impl Iterator for Iter<'_> {
     type Item = (u8, bool);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -107,7 +107,7 @@ fn check_line_part2(mut iter: impl Iterator<Item = u8>) -> bool {
 
     let incr = prev > first;
 
-    while let Some(cur) = iter.next() {
+    for cur in iter {
         if incr && prev >= cur {
             return false;
         }
@@ -145,11 +145,10 @@ pub fn part1(input: &str) -> u32 {
 
 #[aoc(day2, part2)]
 pub fn part2(input: &str) -> u32 {
-    let mut iter = Iter::new(input);
     let mut cnt = 0;
     let mut buf: Vec<u8> = Vec::with_capacity(8);
 
-    while let Some((v, eol)) = iter.next() {
+    for (v, eol) in Iter::new(input) {
         buf.push(v);
 
         if eol {

@@ -19,7 +19,7 @@ impl<'a> Iter<'a> {
     }
 }
 
-impl<'a> Iterator for Iter<'a> {
+impl Iterator for Iter<'_> {
     type Item = (u64, u64);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -83,7 +83,7 @@ pub fn part2(input: &str) -> u64 {
     let mut score = 0;
 
     for i in list {
-        score += i * count.get(&i).copied().unwrap_or(0)
+        score += i * count.get(&i).copied().unwrap_or(0);
     }
 
     score
