@@ -15,7 +15,7 @@ impl<'a> Iter<'a> {
 }
 
 impl<'a> Iterator for Iter<'a> {
-    type Item = (u32, bool);
+    type Item = (u8, bool);
 
     fn next(&mut self) -> Option<Self::Item> {
         let (i, s) = (self.i, self.s);
@@ -24,7 +24,7 @@ impl<'a> Iterator for Iter<'a> {
             return None;
         }
 
-        let a = (s[i] - b'0') as u32;
+        let a = s[i] - b'0';
         let next = s[i + 1];
 
         if next == b' ' {
@@ -37,14 +37,14 @@ impl<'a> Iterator for Iter<'a> {
             return Some((a, true));
         }
 
-        let b = a * 10 + (next - b'0') as u32;
+        let b = a * 10 + (next - b'0');
         self.i += 3;
         Some((b, i + 2 >= s.len() || s[i + 2] == b'\n'))
     }
 }
 
 #[inline]
-fn is_safe_diff(a: u32, b: u32) -> bool {
+fn is_safe_diff(a: u8, b: u8) -> bool {
     let diff = a.abs_diff(b);
     diff > 0 && diff < 4
 }
@@ -97,7 +97,7 @@ fn check_line_part1(iter: &mut Iter) -> Option<bool> {
     Some(true)
 }
 
-fn check_line_part2(mut iter: impl Iterator<Item = u32>) -> bool {
+fn check_line_part2(mut iter: impl Iterator<Item = u8>) -> bool {
     let first = iter.next().unwrap();
     let mut prev = iter.next().unwrap();
 
@@ -127,7 +127,7 @@ fn check_line_part2(mut iter: impl Iterator<Item = u32>) -> bool {
 }
 
 #[aoc(day2, part1)]
-pub fn part1(input: &str) -> usize {
+pub fn part1(input: &str) -> u32 {
     let mut iter = Iter::new(input);
     let mut cnt = 0;
 
@@ -147,7 +147,7 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> u32 {
     let mut iter = Iter::new(input);
     let mut cnt = 0;
-    let mut buf: Vec<u32> = Vec::with_capacity(8);
+    let mut buf: Vec<u8> = Vec::with_capacity(8);
 
     while let Some((v, eol)) = iter.next() {
         buf.push(v);
