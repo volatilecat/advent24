@@ -1,5 +1,5 @@
 use aoc_runner_derive::aoc;
-use memchr::memmem;
+use memchr::{arch::all::packedpair::HeuristicFrequencyRank, memmem};
 
 #[aoc(day3, part1)]
 pub fn part1(input: &str) -> u64 {
@@ -8,11 +8,14 @@ pub fn part1(input: &str) -> u64 {
 
 #[aoc(day3, part2)]
 pub fn part2(input: &str) -> u64 {
+    let dont_finder = build_finder(b"don't()");
+    let do_finder = build_finder(b"do()");
+
     let mut s = input.as_bytes();
     let mut sum = 0;
 
     loop {
-        let next_dont = memmem::find(s, b"don't()");
+        let next_dont = dont_finder.find(s);
 
         let limit = if let Some(next_dont) = next_dont {
             next_dont
@@ -28,7 +31,7 @@ pub fn part2(input: &str) -> u64 {
 
         let from = &s[(limit + 7)..];
 
-        let next_do = memmem::find(from, b"do()");
+        let next_do = do_finder.find(from);
 
         if let Some(next_do) = next_do {
             s = &from[(next_do + 4)..];
@@ -42,12 +45,13 @@ pub fn part2(input: &str) -> u64 {
 
 #[inline(always)]
 fn calculate(mut s: &[u8]) -> u64 {
+    let finder = build_finder(b"mul(");
+
     let mut sum = 0;
 
-    while let Some(pos) = memmem::find(s, b"mul(") {
+    while let Some(pos) = finder.find(s) {
         let mut a = 0u64;
         let mut b = 0u64;
-        let mut next_i = 0usize;
         let mut comma = false;
         let mut closed = false;
 
@@ -58,7 +62,7 @@ fn calculate(mut s: &[u8]) -> u64 {
                 }
                 b',' => {
                     if comma {
-                        next_i = i + 1;
+                        s = &s[(i + 1)..];
                         break;
                     }
                     comma = true;
@@ -66,27 +70,50 @@ fn calculate(mut s: &[u8]) -> u64 {
                     a = 0;
                 }
                 b')' => {
-                    next_i = i + 1;
+                    s = &s[(i + 1)..];
                     closed = true;
                     break;
                 }
                 _ => {
-                    next_i = i;
+                    s = &s[i..];
                     break;
                 }
             }
         }
 
         if !closed || !comma {
-            s = &s[next_i..];
             continue;
         }
 
         sum += a * b;
-        s = &s[next_i..];
     }
 
     sum
+}
+
+#[inline(always)]
+fn build_finder(needle: &[u8]) -> memmem::Finder {
+    memmem::FinderBuilder::new().build_forward_with_ranker(Ranker, needle)
+}
+
+struct Ranker;
+
+impl HeuristicFrequencyRank for Ranker {
+    fn rank(&self, byte: u8) -> u8 {
+        const TABLE: [u8; 256] = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 15, 16, 0, 16, 15, 16, 15, 20, 245, 240, 16, 16, 120, 15, 0, 15, 38, 65, 64,
+            66, 64, 62, 61, 62, 62, 60, 15, 16, 15, 0, 14, 13, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 15, 16, 0, 0, 15, 0, 15, 8, 79, 16,
+            0, 95, 0, 0, 0, 113, 114, 20, 55, 0, 0, 32, 15, 35, 97, 0, 95, 0, 16, 0, 15, 0, 15, 16,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        TABLE[byte as usize]
+    }
 }
 
 #[cfg(test)]
