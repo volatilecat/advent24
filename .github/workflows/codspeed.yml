@@ -19,12 +19,20 @@ jobs:
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v1
         with:
-          channel: nightly-2024-12-01
           cache-target: release
-          bins: cargo-codspeed
+          bins: cargo-codspeed, aoc-cli
+
+      - name: Download available input files
+        env:
+          ADVENT_OF_CODE_SESSION: ${{ secrets.AOC_SESSION }}
+        run: |
+          mkdir -p input/2024
+          for i in {1..25}; do
+            aoc download -I -i input/2024/day$i.txt --year 2024 -d $i || true
+          done
 
       - name: Build the benchmark target(s)
-        run: cargo codspeed build -p advent24
+        run: cargo codspeed build -F ci
 
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v3
