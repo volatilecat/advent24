@@ -1,41 +1,88 @@
 use aoc_runner_derive::aoc;
-use lazy_regex::regex;
+use memchr::memmem;
 
 #[aoc(day3, part1)]
-pub fn part1(input: &str) -> u32 {
-    let re = regex!(r"mul\((\d{1,3}),(\d{1,3})\)");
+pub fn part1(input: &str) -> u64 {
+    calculate(input.as_bytes())
+}
+
+#[aoc(day3, part2)]
+pub fn part2(input: &str) -> u64 {
+    let mut s = input.as_bytes();
     let mut sum = 0;
 
-    for f in re.captures_iter(input) {
-        let a: u32 = f.get(1).unwrap().as_str().parse().unwrap();
-        let b: u32 = f.get(2).unwrap().as_str().parse().unwrap();
-        sum += a * b;
+    loop {
+        let next_dont = memmem::find(s, b"don't()");
+
+        let limit = if let Some(next_dont) = next_dont {
+            next_dont
+        } else {
+            s.len()
+        };
+
+        sum += calculate(&s[0..limit]);
+
+        if limit == s.len() {
+            break;
+        }
+
+        let next_do = memmem::find(&s[limit..], b"do()");
+
+        if let Some(next_do) = next_do {
+            s = &s[(limit + next_do + 4)..];
+        } else {
+            break;
+        }
     }
 
     sum
 }
 
-#[aoc(day3, part2)]
-pub fn part2(input: &str) -> u32 {
-    let re = regex!(r"(do\(\))|(don't\(\))|mul\((\d{1,3}),(\d{1,3})\)");
+#[inline(always)]
+fn calculate(mut s: &[u8]) -> u64 {
     let mut sum = 0;
-    let mut is_on = true;
 
-    for f in re.captures_iter(input) {
-        if f.get(1).is_some() {
-            is_on = true;
+    while let Some(pos) = memmem::find(s, b"mul(") {
+        let mut a = 0u64;
+        let mut b = 0u64;
+        let mut next_i = 0usize;
+        let mut comma = false;
+        let mut closed = false;
+
+        for i in (pos + 4)..=(pos + 11) {
+            match s[i] {
+                x @ b'0'..=b'9' => {
+                    a *= 10;
+                    a += (x - b'0') as u64;
+                }
+                b',' => {
+                    if comma {
+                        next_i = i + 1;
+                        break;
+                    }
+                    comma = true;
+                    b = a;
+                    a = 0;
+                }
+                b')' => {
+                    next_i = i + 1;
+                    closed = true;
+                    break;
+                }
+                _ => {
+                    next_i = i;
+                    break;
+                }
+            }
+        }
+
+        if !closed || !comma {
+            s = &s[next_i..];
             continue;
         }
-        if f.get(2).is_some() {
-            is_on = false;
-            continue;
-        }
-        if !is_on {
-            continue;
-        }
-        let a: u32 = f.get(3).unwrap().as_str().parse().unwrap();
-        let b: u32 = f.get(4).unwrap().as_str().parse().unwrap();
+
         sum += a * b;
+        s = &s[next_i..];
     }
 
     sum
