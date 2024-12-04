@@ -26,10 +26,12 @@ pub fn part2(input: &str) -> u64 {
             break;
         }
 
-        let next_do = memmem::find(&s[limit..], b"do()");
+        let from = &s[(limit + 7)..];
+
+        let next_do = memmem::find(from, b"do()");
 
         if let Some(next_do) = next_do {
-            s = &s[(limit + next_do + 4)..];
+            s = &from[(next_do + 4)..];
         } else {
             break;
         }
@@ -52,8 +54,7 @@ fn calculate(mut s: &[u8]) -> u64 {
         for i in (pos + 4)..=(pos + 11) {
             match s[i] {
                 x @ b'0'..=b'9' => {
-                    a *= 10;
-                    a += (x - b'0') as u64;
+                    a = a * 10 + (x - b'0') as u64;
                 }
                 b',' => {
                     if comma {
