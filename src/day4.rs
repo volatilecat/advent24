@@ -21,11 +21,11 @@ fn word(b: &[u8], i1: usize, i2: usize, i3: usize, i4: usize) -> u32 {
 
 #[aoc(day4, part1)]
 pub fn part1(input: &str) -> u32 {
-    part1_impl::<141, 140>(input)
+    unsafe { part1_impl::<141, 140>(input) }
 }
 
-#[inline(always)]
-fn part1_impl<const W: usize, const H: usize>(input: &str) -> u32 {
+#[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,lzcnt,movbe,popcnt")]
+unsafe fn part1_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     let b = input.as_bytes();
     let mut cnt = 0;
 
@@ -56,18 +56,18 @@ fn part1_impl<const W: usize, const H: usize>(input: &str) -> u32 {
 
 #[aoc(day4, part2)]
 pub fn part2(input: &str) -> u32 {
-    part2_impl::<141, 140>(input)
+    unsafe { part2_impl::<141, 140>(input) }
 }
 
-#[inline(always)]
-fn part2_impl<const W: usize, const H: usize>(input: &str) -> u32 {
+#[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,lzcnt,movbe,popcnt")]
+unsafe fn part2_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     let b = input.as_bytes();
     let mut cnt = 0;
 
     for row in 1..(H - 1) {
         for col in 1..(W - 2) {
             let p = W * row + col;
-            if unsafe { *b.get_unchecked(p) } == b'A' {
+            if *b.get_unchecked(p) == b'A' {
                 let w = word(b, p - W - 1, p + W + 1, p - W + 1, p + W - 1);
                 cnt += (w == MSMS) as u32
                     + (w == MSSM) as u32
@@ -100,11 +100,11 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(part1_impl::<11, 10>(EX), 18);
+        assert_eq!(unsafe { part1_impl::<11, 10>(EX) }, 18);
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2_impl::<11, 10>(EX), 9);
+        assert_eq!(unsafe { part2_impl::<11, 10>(EX) }, 9);
     }
 }
