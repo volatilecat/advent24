@@ -1,4 +1,5 @@
 use aoc_runner_derive::aoc;
+use memchr::memmem;
 
 const XMAS: u32 = u32::from_be_bytes([b'X', b'M', b'A', b'S']);
 const SAMX: u32 = u32::from_be_bytes([b'S', b'A', b'M', b'X']);
@@ -28,21 +29,12 @@ unsafe fn part1_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     let b = input.as_bytes();
     let mut cnt = 0;
 
-    // cnt += memmem::find_iter(b, b"XMAS").count() as u32;
-    // cnt += memmem::find_iter(b, b"SAMX").count() as u32;
+    cnt += memmem::find_iter(b, b"XMAS").count() as u32;
+    cnt += memmem::find_iter(b, b"SAMX").count() as u32;
 
-    for row in 0..H {
+    for row in 0..(H - 3) {
         for col in 0..(W - 1) {
             let p = W * row + col;
-
-            if col < (W - 4) {
-                let w = word(b, p, p + 1, p + 2, p + 3);
-                cnt += (w == XMAS) as u32 + (w == SAMX) as u32;
-            }
-
-            if row >= (H - 3) {
-                continue;
-            }
 
             let w = word(b, p, p + W, p + W * 2, p + W * 3);
             cnt += (w == XMAS) as u32 + (w == SAMX) as u32;
