@@ -1,75 +1,47 @@
 use aoc_runner_derive::aoc;
 use memchr::memmem;
 
+const XMAS: u32 = u32::from_be_bytes([b'X', b'M', b'A', b'S']);
+const SAMX: u32 = u32::from_be_bytes([b'S', b'A', b'M', b'X']);
+
+const MSMS: u32 = u32::from_be_bytes([b'M', b'S', b'M', b'S']);
+const MSSM: u32 = u32::from_be_bytes([b'M', b'S', b'S', b'M']);
+const SMMS: u32 = u32::from_be_bytes([b'S', b'M', b'M', b'S']);
+const SMSM: u32 = u32::from_be_bytes([b'S', b'M', b'S', b'M']);
+
+#[inline(always)]
+fn word(b: &[u8], i1: usize, i2: usize, i3: usize, i4: usize) -> u32 {
+    (b[i1] as u32) << 24 | (b[i2] as u32) << 16 | (b[i3] as u32) << 8 | b[i4] as u32
+}
+
 #[aoc(day4, part1)]
-pub fn part1(input: &str) -> u64 {
+pub fn part1(input: &str) -> u32 {
     part1_impl::<141, 140>(input)
 }
 
 #[inline(always)]
-fn part1_impl<const W: usize, const H: usize>(input: &str) -> u64 {
+fn part1_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     let b = input.as_bytes();
     let mut cnt = 0;
 
-    cnt += memmem::find_iter(b, b"XMAS").count() as u64;
-    cnt += memmem::find_iter(b, b"SAMX").count() as u64;
-
-    // vert
+    cnt += memmem::find_iter(b, b"XMAS").count() as u32;
+    cnt += memmem::find_iter(b, b"SAMX").count() as u32;
 
     for row in 0..(H - 3) {
         for col in 0..(W - 1) {
-            if b[W * row + col] == b'X'
-                && b[W * row + col + W] == b'M'
-                && b[W * row + col + W * 2] == b'A'
-                && b[W * row + col + W * 3] == b'S'
-            {
-                cnt += 1;
-            } else if b[W * row + col] == b'S'
-                && b[W * row + col + W] == b'A'
-                && b[W * row + col + W * 2] == b'M'
-                && b[W * row + col + W * 3] == b'X'
-            {
-                cnt += 1;
+            let p = W * row + col;
+
+            let w = word(b, p, p + W, p + W * 2, p + W * 3);
+            cnt += (w == XMAS) as u32 + (w == SAMX) as u32;
+
+            if col < (W - 4) {
+                let w = word(b, p, p + W + 1, p + W * 2 + 2, p + W * 3 + 3);
+                cnt += (w == XMAS) as u32 + (w == SAMX) as u32;
             }
-        }
-    }
 
-    // diag \
-
-    for row in 0..(H - 3) {
-        for col in 0..(W - 4) {
-            if b[W * row + col] == b'X'
-                && b[W * row + col + W + 1] == b'M'
-                && b[W * row + col + W * 2 + 2] == b'A'
-                && b[W * row + col + W * 3 + 3] == b'S'
-            {
-                cnt += 1;
-            } else if b[W * row + col] == b'S'
-                && b[W * row + col + W + 1] == b'A'
-                && b[W * row + col + W * 2 + 2] == b'M'
-                && b[W * row + col + W * 3 + 3] == b'X'
-            {
-                cnt += 1;
-            }
-        }
-    }
-
-    // diag /
-
-    for row in 0..(H - 3) {
-        for col in 3..(W - 1) {
-            if b[W * row + col] == b'X'
-                && b[W * row + col + (W - 1)] == b'M'
-                && b[W * row + col + (W - 1) * 2] == b'A'
-                && b[W * row + col + (W - 1) * 3] == b'S'
-            {
-                cnt += 1;
-            } else if b[W * row + col] == b'S'
-                && b[W * row + col + (W - 1)] == b'A'
-                && b[W * row + col + (W - 1) * 2] == b'M'
-                && b[W * row + col + (W - 1) * 3] == b'X'
-            {
-                cnt += 1;
+            if col >= 3 {
+                let w = word(b, p, p + (W - 1), p + (W - 1) * 2, p + (W - 1) * 3);
+                cnt += (w == XMAS) as u32 + (w == SAMX) as u32;
             }
         }
     }
@@ -78,30 +50,24 @@ fn part1_impl<const W: usize, const H: usize>(input: &str) -> u64 {
 }
 
 #[aoc(day4, part2)]
-pub fn part2(input: &str) -> u64 {
+pub fn part2(input: &str) -> u32 {
     part2_impl::<141, 140>(input)
 }
 
 #[inline(always)]
-fn part2_impl<const W: usize, const H: usize>(input: &str) -> u64 {
-    let mut cnt = 0;
-
+fn part2_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     let b = input.as_bytes();
+    let mut cnt = 0;
 
     for row in 1..(H - 1) {
         for col in 1..(W - 2) {
-            if b[W * row + col] != b'A' {
-                continue;
-            }
-
-            if b[W * row + col - W - 1] == b'M' && b[W * row + col + W + 1] == b'S'
-                || b[W * row + col - W - 1] == b'S' && b[W * row + col + W + 1] == b'M'
-            {
-                if b[W * row + col - W + 1] == b'M' && b[W * row + col + W - 1] == b'S'
-                    || b[W * row + col - W + 1] == b'S' && b[W * row + col + W - 1] == b'M'
-                {
-                    cnt += 1;
-                }
+            let p = W * row + col;
+            if b[p] == b'A' {
+                let w = word(b, p - W - 1, p + W + 1, p - W + 1, p + W - 1);
+                cnt += (w == MSMS) as u32
+                    + (w == MSSM) as u32
+                    + (w == SMMS) as u32
+                    + (w == SMSM) as u32;
             }
         }
     }
