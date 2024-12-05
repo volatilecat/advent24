@@ -11,7 +11,12 @@ const SMSM: u32 = u32::from_be_bytes([b'S', b'M', b'S', b'M']);
 
 #[inline(always)]
 fn word(b: &[u8], i1: usize, i2: usize, i3: usize, i4: usize) -> u32 {
-    (b[i1] as u32) << 24 | (b[i2] as u32) << 16 | (b[i3] as u32) << 8 | b[i4] as u32
+    unsafe {
+        (*b.get_unchecked(i1) as u32) << 24
+            | (*b.get_unchecked(i2) as u32) << 16
+            | (*b.get_unchecked(i3) as u32) << 8
+            | *b.get_unchecked(i4) as u32
+    }
 }
 
 #[aoc(day4, part1)]
@@ -62,7 +67,7 @@ fn part2_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     for row in 1..(H - 1) {
         for col in 1..(W - 2) {
             let p = W * row + col;
-            if b[p] == b'A' {
+            if unsafe { *b.get_unchecked(p) } == b'A' {
                 let w = word(b, p - W - 1, p + W + 1, p - W + 1, p + W - 1);
                 cnt += (w == MSMS) as u32
                     + (w == MSSM) as u32
