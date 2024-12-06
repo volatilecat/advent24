@@ -1,5 +1,3 @@
-use aoc_runner_derive::aoc;
-
 struct Iter<'a> {
     s: &'a [u8],
     i: usize,
@@ -126,7 +124,6 @@ fn check_line_part2(mut iter: impl Iterator<Item = u8>) -> bool {
     true
 }
 
-#[aoc(day2, part1)]
 pub fn part1(input: &str) -> u32 {
     let mut iter = Iter::new(input);
     let mut cnt = 0;
@@ -143,7 +140,6 @@ pub fn part1(input: &str) -> u32 {
     1000 - cnt
 }
 
-#[aoc(day2, part2)]
 pub fn part2(input: &str) -> u32 {
     let mut cnt = 0;
     let mut buf: Vec<u8> = Vec::with_capacity(8);

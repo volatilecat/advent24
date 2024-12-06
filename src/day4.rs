@@ -1,4 +1,3 @@
-use aoc_runner_derive::aoc;
 use memchr::memmem;
 
 const XMAS: u32 = u32::from_be_bytes([b'X', b'M', b'A', b'S']);
@@ -19,7 +18,6 @@ fn word(b: &[u8], i1: usize, i2: usize, i3: usize, i4: usize) -> u32 {
     }
 }
 
-#[aoc(day4, part1)]
 pub fn part1(input: &str) -> u32 {
     unsafe { part1_impl::<141, 140>(input) }
 }
@@ -54,7 +52,6 @@ unsafe fn part1_impl<const W: usize, const H: usize>(input: &str) -> u32 {
     cnt
 }
 
-#[aoc(day4, part2)]
 pub fn part2(input: &str) -> u32 {
     unsafe { part2_impl::<141, 140>(input) }
 }

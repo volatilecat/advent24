@@ -32,7 +32,7 @@ jobs:
           done
 
       - name: Build the benchmark target(s)
-        run: cargo codspeed build -F ci
+        run: cargo codspeed build
         env:
           RUSTFLAGS: -C target-cpu=native
 

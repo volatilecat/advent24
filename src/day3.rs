@@ -1,12 +1,9 @@
-use aoc_runner_derive::aoc;
 use memchr::{arch::all::packedpair::HeuristicFrequencyRank, memmem};
 
-#[aoc(day3, part1)]
 pub fn part1(input: &str) -> u64 {
     calculate(input.as_bytes())
 }
 
-#[aoc(day3, part2)]
 pub fn part2(input: &str) -> u64 {
     let dont_finder = build_finder(b"don't()");
     let do_finder = build_finder(b"do()");

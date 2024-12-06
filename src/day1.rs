@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use aoc_runner_derive::aoc;
 use rustc_hash::FxBuildHasher;
 
 const INPUT_CAP: usize = 1000;
@@ -47,7 +46,6 @@ impl Iterator for Iter<'_> {
     }
 }
 
-#[aoc(day1, part1)]
 pub fn part1(input: &str) -> u64 {
     let mut a = Vec::with_capacity(INPUT_CAP);
     let mut b = Vec::with_capacity(INPUT_CAP);
@@ -69,7 +67,6 @@ pub fn part1(input: &str) -> u64 {
     sum
 }
 
-#[aoc(day1, part2)]
 pub fn part2(input: &str) -> u64 {
     let mut list = Vec::with_capacity(INPUT_CAP);
     let mut count: HashMap<u64, u64, _> =
