@@ -62,39 +62,84 @@ fn find_newline(mut b: &[u8]) -> Option<usize> {
 }
 
 fn parse_updates(mut b: &[u8], updates: &mut [u8; 64]) -> usize {
-    let ascii0 = u8x16::splat(b'0');
-    let ten = u8x16::splat(10);
+    let ascii0_16 = u8x16::splat(b'0');
+    let ten_16 = u8x16::splat(10);
+
+    let ascii0_32 = u8x32::splat(b'0');
+    let ten_32 = u8x32::splat(10);
+
     let mut count = 0;
 
     while !b.is_empty() {
-        let (a, len) = if b.len() < 32 {
-            (u8x32::load_or_default(&b[..]), b.len())
-        } else {
-            (u8x32::from_slice(&b[..32]), 32)
-        };
+        if b.len() >= 65 {
+            let x = u8x32::from_slice(&b[..32]);
+            let y = u8x32::from_slice(&b[33..]);
 
-        let a_hi: u8x16 = simd_swizzle!(
-            a,
+            let hi: u8x32 = simd_swizzle!(
+                x,
+                y,
+                [
+                    0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, // 11
+                    32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, // 11
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //
+                ]
+            );
+            let lo: u8x32 = simd_swizzle!(
+                x,
+                y,
+                [
+                    1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, // 11
+                    33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, // 11
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //
+                ]
+            );
+
+            let r = (hi - ascii0_32) * ten_32 + (lo - ascii0_32);
+            r.copy_to_slice(&mut updates[count..]);
+
+            b = &b[66..];
+            count += 22;
+
+            continue;
+        }
+
+        if b.len() < 33 {
+            loop {
+                let x = (b[0] - b'0') * 10 + (b[1] - b'0');
+
+                updates[count] = x;
+                count += 1;
+
+                if b.len() < 3 {
+                    return count;
+                }
+
+                b = &b[3..];
+            }
+        }
+
+        let x = u8x32::from_slice(&b[..32]);
+
+        let hi: u8x16 = simd_swizzle!(
+            x,
             [
-                0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, //
+                0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, // 11
                 0, 0, 0, 0, 0, //
             ]
         );
 
-        let a_lo: u8x16 = simd_swizzle!(
-            a,
+        let lo: u8x16 = simd_swizzle!(
+            x,
             [
-                1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, //
+                1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, // 11
                 0, 0, 0, 0, 0, //
             ]
         );
 
-        let r = (a_hi - ascii0) * ten + (a_lo - ascii0);
+        let r = (hi - ascii0_16) * ten_16 + (lo - ascii0_16);
         r.copy_to_slice(&mut updates[count..]);
-
-        let shift = (b.len() > 32) as usize;
-        b = &b[(len + shift)..];
-        count += (len + 1) / 3;
+        b = &b[33..];
+        count += 11;
     }
 
     count
