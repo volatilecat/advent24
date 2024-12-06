@@ -1,11 +1,18 @@
 use std::simd::prelude::*;
 
 pub fn part1(input: &str) -> u32 {
-    unsafe { part1_impl(input) }
+    unsafe { calculate(input, get_correct) }
+}
+
+pub fn part2(input: &str) -> u32 {
+    unsafe { calculate(input, get_incorrect) }
 }
 
 #[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,lzcnt,movbe,popcnt")]
-unsafe fn part1_impl(input: &str) -> u32 {
+unsafe fn calculate<F>(input: &str, f: F) -> u32
+where
+    F: Fn(&[u8], &[u128; 100]) -> Option<u8>,
+{
     let mut b = input.as_bytes();
     let mut table = [0u128; 100];
 
@@ -30,7 +37,7 @@ unsafe fn part1_impl(input: &str) -> u32 {
     while let Some(eol) = find_newline(b) {
         let count = parse_updates(&b[..eol], &mut updates);
 
-        if let Some(page) = get_correct(&updates[..count], &table) {
+        if let Some(page) = f(&updates[..count], &table) {
             sum += page as u32;
         }
 
@@ -160,46 +167,6 @@ fn get_correct(updates: &[u8], table: &[u128; 100]) -> Option<u8> {
     }
 
     Some(updates[updates.len() / 2])
-}
-
-pub fn part2(input: &str) -> u32 {
-    unsafe { part2_impl(input) }
-}
-
-#[target_feature(enable = "avx2,bmi1,bmi2,cmpxchg16b,lzcnt,movbe,popcnt")]
-unsafe fn part2_impl(input: &str) -> u32 {
-    let mut b = input.as_bytes();
-    let mut table = [0u128; 100];
-
-    loop {
-        let req = (b[0] - b'0') * 10 + (b[1] - b'0');
-        let page = (b[3] - b'0') * 10 + (b[4] - b'0');
-
-        table[page as usize] |= 1 << req as u128;
-
-        b = &b[6..];
-
-        if b[0] == b'\n' {
-            b = &b[1..];
-            break;
-        }
-    }
-
-    let mut sum = 0;
-
-    let mut updates = [0u8; 64];
-
-    while let Some(eol) = find_newline(b) {
-        let count = parse_updates(&b[..eol], &mut updates);
-
-        if let Some(page) = get_incorrect(&updates[..count], &table) {
-            sum += page as u32;
-        }
-
-        b = &b[(eol + 1)..];
-    }
-
-    sum
 }
 
 #[inline]
